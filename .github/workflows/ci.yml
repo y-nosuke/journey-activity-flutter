@@ -40,6 +40,12 @@ jobs:
       - name: Build Android
         run: flutter build apk --release
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: build/app/outputs/flutter-apk/app-release.apk
+
   build-ios:
     runs-on: macos-latest
 
@@ -64,3 +70,9 @@ jobs:
 
       - name: Build iOS
         run: flutter build ios --no-codesign
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-ios
+          path: build/ios/iphoneos/Runner.app
