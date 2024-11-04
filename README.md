@@ -7,7 +7,7 @@ A new Flutter project.
 ```sh
 flutter create -e journey-activity-flutter --project-name journey_activity_flutter
 
-flutter pub add logger go_router
+flutter pub add logger go_router google_maps_flutter
 ```
 
 ## 参考
