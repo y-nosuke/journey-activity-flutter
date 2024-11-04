@@ -37,6 +37,9 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Create Secret
+        run: echo "GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" > android/secret.properties
+
       - name: Build Android
         run: flutter build apk --release
 
@@ -67,6 +70,16 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+      - name: Create Secret
+        run: |
+          cat <<EOF > ios/Runner/Environment.swift
+          import Foundation
+  
+          struct Env {
+            static let GOOGLE_MAPS_API_KEY = "${{ secrets.GOOGLE_MAPS_API_KEY }}"
+          }
+          EOF
 
       - name: Build iOS
         run: flutter build ios --no-codesign
