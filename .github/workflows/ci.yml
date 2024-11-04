@@ -75,14 +75,11 @@ jobs:
         run: |
           cat <<EOF > ios/Runner/Environment.swift
           import Foundation
-  
-          struct Env {
-            static let GOOGLE_MAPS_API_KEY = "${{ secrets.GOOGLE_MAPS_API_KEY }}"
+          
+          public struct Env {
+            public static let GOOGLE_MAPS_API_KEY = "${{ secrets.GOOGLE_MAPS_API_KEY }}"
           }
           EOF
-
-      - name: ls
-        run: ls -l ios/Runner
 
       - name: Build iOS
         run: flutter build ios --no-codesign
