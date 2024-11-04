@@ -81,6 +81,9 @@ jobs:
           }
           EOF
 
+      - name: ls
+        run: ls -l ios/Runner
+
       - name: Build iOS
         run: flutter build ios --no-codesign
 
