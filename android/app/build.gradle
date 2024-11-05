@@ -5,12 +5,14 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-def secretProperties = new Properties()
-def secretPropertiesFile = rootProject.file('secret.properties')
-if (secretPropertiesFile.exists()) {
-    secretPropertiesFile.withReader('UTF-8') { reader ->
-        secretProperties.load(reader)
-    }
+def dartDefines = [:];
+if (project.hasProperty('dart-defines')) {
+    dartDefines = dartDefines + project.property('dart-defines')
+        .split(',')
+        .collectEntries { entry ->
+            def pair = new String(entry.decodeBase64(), 'UTF-8').split('=')
+            [(pair.first()): pair.last()]
+        }
 }
 
 android {
@@ -36,9 +38,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders += [
-            googleMapApiKey: secretProperties.getProperty('GOOGLE_MAPS_API_KEY'),
-        ]
+        resValue "string", "google_map_api_key", "${dartDefines.googleMapsApiKey}"
     }
 
     buildTypes {
