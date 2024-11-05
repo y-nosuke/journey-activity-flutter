@@ -37,8 +37,11 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Create Secret
+        run: echo "googleMapsApiKey=${{ secrets.GOOGLE_MAPS_API_KEY }}" > dart_defines/local.env
+
       - name: Build Android
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define-from-file=dart_defines/local.env
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -68,8 +71,11 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Create Secret
+        run: echo "googleMapsApiKey=${{ secrets.GOOGLE_MAPS_API_KEY }}" > dart_defines/local.env
+
       - name: Build iOS
-        run: flutter build ios --no-codesign
+        run: flutter build ios --no-codesign --dart-define-from-file=dart_defines/local.env
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
