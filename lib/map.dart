@@ -28,6 +28,9 @@ class MapSampleState extends State<MapScreen> {
     distanceFilter: 5,
   );
 
+  bool trackingMode = true;
+  bool pointerDown = false;
+
   @override
   void initState() {
     super.initState();
@@ -60,39 +63,61 @@ class MapSampleState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        GoogleMap(
-          mapType: MapType.normal,
-          initialCameraPosition: _initialCameraPosition,
-          myLocationEnabled: true,
-          myLocationButtonEnabled: false,
-          zoomControlsEnabled: false,
-          onMapCreated: (GoogleMapController controller) {
-            _controller.complete(controller);
+        Listener(
+          onPointerDown: (e) {
+            logger.d('onPointerDown: $e');
+            pointerDown = true;
+          },
+          onPointerUp: (e) {
+            logger.d('onPointerUp: $e');
+            pointerDown = false;
+          },
+          child: GoogleMap(
+            mapType: MapType.normal,
+            initialCameraPosition: _initialCameraPosition,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            onMapCreated: (GoogleMapController controller) {
+              logger.d('onMapCreated: $controller');
 
-            Geolocator.getPositionStream(locationSettings: locationSettings)
-                .listen((Position? position) async {
-              if (position == null) {
-                logger.d('現在位置が取れなかった');
-                return;
+              _controller.complete(controller);
+
+              Geolocator.getPositionStream(locationSettings: locationSettings)
+                  .listen((Position? position) async {
+                if (position == null) {
+                  logger.d('現在位置が取れなかった');
+                  return;
+                }
+
+                logger.d(
+                    '現在位置取得: ${position.latitude.toString()}, ${position.longitude.toString()}');
+
+                if (trackingMode) {
+                  final zoom = await controller.getZoomLevel();
+                  controller.animateCamera(
+                    CameraUpdate.newCameraPosition(
+                      CameraPosition(
+                          target: LatLng(position.latitude, position.longitude),
+                          zoom: zoom),
+                    ),
+                  );
+                }
+              });
+            },
+            onCameraMoveStarted: () {
+              logger.d('onCameraMoveStarted');
+              if (pointerDown) {
+                setState(() {
+                  trackingMode = false;
+                });
               }
-
+            },
+            onTap: (latLng) {
               logger.d(
-                  '現在位置取得: ${position.latitude.toString()}, ${position.longitude.toString()}');
-
-              final zoom = await controller.getZoomLevel();
-              controller.animateCamera(
-                CameraUpdate.newCameraPosition(
-                  CameraPosition(
-                      target: LatLng(position.latitude, position.longitude),
-                      zoom: zoom),
-                ),
-              );
-            });
-          },
-          onTap: (latLng) => {
-            logger.d(
-                "latitude: ${latLng.latitude}, longitude: ${latLng.longitude}")
-          },
+                  'onTap latitude: ${latLng.latitude}, longitude: ${latLng.longitude}');
+            },
+          ),
         ),
         Positioned(
           right: 10,
@@ -104,26 +129,38 @@ class MapSampleState extends State<MapScreen> {
               foregroundColor: Colors.black,
               shape: const CircleBorder(),
             ),
-            onPressed: () async {
-              Position position = await Geolocator.getCurrentPosition(
-                  locationSettings: locationSettings);
-              logger.d(
-                  '現在位置取得: ${position.latitude.toString()}, ${position.longitude.toString()}');
+            onPressed: !trackingMode
+                ? () async {
+                    logger.d('onPressed');
 
-              final GoogleMapController controller = await _controller.future;
-              final zoom = await controller.getZoomLevel();
-              controller.animateCamera(
-                CameraUpdate.newCameraPosition(
-                  CameraPosition(
-                      target: LatLng(position.latitude, position.longitude),
-                      zoom: zoom),
-                ),
-              );
-            },
+                    setState(() {
+                      trackingMode = true;
+                    });
+
+                    Position position = await Geolocator.getCurrentPosition(
+                        locationSettings: locationSettings);
+                    logger.d(
+                        '現在位置取得: ${position.latitude.toString()}, ${position.longitude.toString()}');
+
+                    final GoogleMapController controller =
+                        await _controller.future;
+                    final zoom = await controller.getZoomLevel();
+                    controller.animateCamera(
+                      CameraUpdate.newCameraPosition(
+                        CameraPosition(
+                            target:
+                                LatLng(position.latitude, position.longitude),
+                            zoom: zoom),
+                      ),
+                    );
+                  }
+                : null,
             child: const Icon(Icons.near_me_outlined),
           ),
         ),
       ],
     );
   }
+
+  void moveToCurrentPosition() {}
 }
