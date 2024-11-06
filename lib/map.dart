@@ -25,7 +25,7 @@ class MapSampleState extends State<MapScreen> {
 
   final LocationSettings locationSettings = const LocationSettings(
     accuracy: LocationAccuracy.high,
-    distanceFilter: 100,
+    distanceFilter: 5,
   );
 
   @override
@@ -53,13 +53,6 @@ class MapSampleState extends State<MapScreen> {
       }
     });
 
-    Geolocator.getPositionStream(locationSettings: locationSettings)
-        .listen((Position? position) {
-      logger.d(position == null
-          ? 'Unknown'
-          : '${position.latitude.toString()}, ${position.longitude.toString()}');
-    });
-
     setState(() {});
   }
 
@@ -75,6 +68,26 @@ class MapSampleState extends State<MapScreen> {
           zoomControlsEnabled: false,
           onMapCreated: (GoogleMapController controller) {
             _controller.complete(controller);
+
+            Geolocator.getPositionStream(locationSettings: locationSettings)
+                .listen((Position? position) async {
+              if (position == null) {
+                logger.d('現在位置が取れなかった');
+                return;
+              }
+
+              logger.d(
+                  '現在位置取得: ${position.latitude.toString()}, ${position.longitude.toString()}');
+
+              final zoom = await controller.getZoomLevel();
+              controller.animateCamera(
+                CameraUpdate.newCameraPosition(
+                  CameraPosition(
+                      target: LatLng(position.latitude, position.longitude),
+                      zoom: zoom),
+                ),
+              );
+            });
           },
           onTap: (latLng) => {
             logger.d(
@@ -92,18 +105,17 @@ class MapSampleState extends State<MapScreen> {
               shape: const CircleBorder(),
             ),
             onPressed: () async {
-              Position currentPosition = await Geolocator.getCurrentPosition(
+              Position position = await Geolocator.getCurrentPosition(
                   locationSettings: locationSettings);
               logger.d(
-                  '${currentPosition.latitude.toString()}, ${currentPosition.longitude.toString()}');
+                  '現在位置取得: ${position.latitude.toString()}, ${position.longitude.toString()}');
 
               final GoogleMapController controller = await _controller.future;
               final zoom = await controller.getZoomLevel();
               controller.animateCamera(
                 CameraUpdate.newCameraPosition(
                   CameraPosition(
-                      target: LatLng(
-                          currentPosition.latitude, currentPosition.longitude),
+                      target: LatLng(position.latitude, position.longitude),
                       zoom: zoom),
                 ),
               );
