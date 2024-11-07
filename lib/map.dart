@@ -32,6 +32,7 @@ class MapState extends State<MapScreen> {
   bool pointerDown = false;
 
   final Set<Circle> route = {};
+  int pointNo = 0;
 
   @override
   void initState() {
@@ -97,7 +98,7 @@ class MapState extends State<MapScreen> {
                     '現在位置取得: ${position.latitude.toString()}, ${position.longitude.toString()}');
 
                 setState(() {
-                  String circleIdVal = 'circle_id_${route.length}';
+                  String circleIdVal = 'circle_id_$pointNo';
                   route.add(
                     Circle(
                       circleId: CircleId(circleIdVal),
@@ -109,7 +110,13 @@ class MapState extends State<MapScreen> {
                       onTap: () => {logger.d("circle_1 tapped!")},
                     ),
                   );
+                  logger.d('circleId: ${route.first.circleId}');
+                  if (route.length > 10) {
+                    route.remove(route.first);
+                  }
                 });
+
+                pointNo++;
 
                 if (trackingMode) {
                   final zoom = await controller.getZoomLevel();
