@@ -11,10 +11,10 @@ class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
   @override
-  State<MapScreen> createState() => MapSampleState();
+  State<MapScreen> createState() => MapState();
 }
 
-class MapSampleState extends State<MapScreen> {
+class MapState extends State<MapScreen> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
@@ -31,8 +31,12 @@ class MapSampleState extends State<MapScreen> {
   bool trackingMode = true;
   bool pointerDown = false;
 
+  final Set<Circle> route = {};
+  int pointNo = 0;
+
   @override
   void initState() {
+    logger.d('MapState.initState');
     super.initState();
 
     Future(() async {
@@ -55,12 +59,11 @@ class MapSampleState extends State<MapScreen> {
             'Location permissions are permanently denied, we cannot request permissions.');
       }
     });
-
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    logger.d('MapState.build');
     return Stack(
       children: [
         Listener(
@@ -78,6 +81,7 @@ class MapSampleState extends State<MapScreen> {
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
+            circles: route,
             onMapCreated: (GoogleMapController controller) {
               logger.d('onMapCreated: $controller');
 
@@ -92,6 +96,27 @@ class MapSampleState extends State<MapScreen> {
 
                 logger.d(
                     '現在位置取得: ${position.latitude.toString()}, ${position.longitude.toString()}');
+
+                setState(() {
+                  String circleIdVal = 'circle_id_$pointNo';
+                  route.add(
+                    Circle(
+                      circleId: CircleId(circleIdVal),
+                      center: LatLng(position.latitude, position.longitude),
+                      radius: 50,
+                      fillColor: Colors.red.withOpacity(0.5),
+                      strokeColor: const Color(0XFFFF0000),
+                      strokeWidth: 2,
+                      onTap: () => {logger.d("circle_1 tapped!")},
+                    ),
+                  );
+                  logger.d('circleId: ${route.first.circleId}');
+                  if (route.length > 10) {
+                    route.remove(route.first);
+                  }
+                });
+
+                pointNo++;
 
                 if (trackingMode) {
                   final zoom = await controller.getZoomLevel();
